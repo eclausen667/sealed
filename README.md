@@ -61,7 +61,7 @@
     example_response: {'removed': 'a van was removed from a car spot'}
 ```
 
-## ASUMPTIONS
+## ASSUMPTIONS
 ```
 For this take home project I made the assumption that when there are 3 car spots available that they are adjacent. I also made the assumption that when removing vehicles from the lots the preference to clear spots goes in the order of Van, Car, Motorcycle. 
 
