@@ -24,7 +24,7 @@ def park_helper(vehicle_type: str, spot_type: str) -> json:
     pv = parked_vehicles[spot_type]
     pv.append(vehicle_type)
     parked_vehicles[spot_type] = pv
-    return jsonify({"message": "Vehicle parked"})
+    return jsonify({"Vehicle parked": vehicle_type})
 
 
 def motorcycle_helper() -> json:
@@ -92,20 +92,23 @@ def park_vehicle() -> json:
         return van_helper()
 
 
-def remove_helper(vehicle_type: str):
+def remove_helper(vehicle_type: str) -> json:
     """function to remove a vehicle with preference to opening van spots, then car spots, then motorcycle spots."""
     if vehicle_type in parked_vehicles[VAN]:
-        parked_vehicles[VAN].pop(vehicle_type)
+        parked_vehicles[VAN].remove(vehicle_type)
         spots[VAN] += 1
+        return jsonify({"removed": f"a {vehicle_type} was removed from a van spot"})
     elif vehicle_type in parked_vehicles[CAR]:
-        parked_vehicles[CAR].pop(vehicle_type)
+        parked_vehicles[CAR].remove(vehicle_type)
         if vehicle_type == VAN:
             spots[CAR] += 3
         else:
             spots[CAR] += 1
+        return jsonify({"removed": f"a {vehicle_type} was removed from a car spot"})
     elif vehicle_type in parked_vehicles[MOTORCYCLE]:
-        parked_vehicles[MOTORCYCLE].pop(vehicle_type)
+        parked_vehicles[MOTORCYCLE].remove(vehicle_type)
         spots[MOTORCYCLE] += 1
+        return jsonify({"removed": f"a {vehicle_type} was removed from a motorcycle spot"})
 
 
 @app.route('/parking_lot/remove', methods=['DELETE'])
@@ -114,14 +117,21 @@ def remove_vehicle() -> json:
     data = request.get_json()
     vehicle_type = data[VEHICLE_TYPE]
     if vehicle_type not in parked_vehicles:
-        return jsonify({"message": "this type of vehicle is not parked in the lot"})
+        return jsonify({"Warning": "this type of vehicle is not parked in the lot"})
     return remove_helper(vehicle_type)
 
 
 @app.route('/parking_lot/van_spots_occupied', methods=['GET'])
 def get_van_spots() -> json:
-    """get the number of remaining van spots."""
-    return jsonify({"message": str(spots[VAN])})
+    """get the number of spots occupied by vans."""
+    if VAN in parked_vehicles[CAR]:
+        van_in_car = 0
+        for i in parked_vehicles[CAR]:
+            if i == VAN:
+                van_in_car += 1
+        return jsonify({"van spots:": str(len(parked_vehicles[VAN])), "car spots:": str(van_in_car)})
+    else:
+        return jsonify({"van spots:": str(len(parked_vehicles[VAN]))})
 
 
 spots, parked_vehicles = initialize(NUMBER_OF_MOTORCYCLE_SPOTS, NUMBER_OF_CAR_SPOTS, NUMBER_OF_VAN_SPOTS)

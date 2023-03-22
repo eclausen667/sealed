@@ -2,6 +2,7 @@ import json
 import unittest
 from main import app, parked_vehicles, spots, MOTORCYCLE, CAR, VAN, VEHICLE_TYPE
 
+
 class ParkingLotTest(unittest.TestCase):
 
     def setUp(self):
@@ -23,31 +24,48 @@ class ParkingLotTest(unittest.TestCase):
         self.assertIn('is_full', data)
 
     def test_van_spots_occupied(self):
+        data = {VEHICLE_TYPE: VAN}
+        spots[CAR] = 3
+        spots[MOTORCYCLE] = 0
+        spots[VAN] = 1
+        self.client.post('/parking_lot/park', json=data)
+        data2 = {VEHICLE_TYPE: VAN}
+        self.client.post('/parking_lot/park', json=data2)
         response = self.client.get('/parking_lot/van_spots_occupied')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.get_data())
-        self.assertIn("message", data)
+        self.assertIn("van spots:", data)
+        self.assertIn("car spots:", data)
 
     def test_park_motorcycle(self):
         data = {VEHICLE_TYPE: MOTORCYCLE}
         response = self.client.post('/parking_lot/park', json=data)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.get_data())
-        self.assertIn('message', data)
+        self.assertIn('Vehicle parked', data)
 
     def test_park_van(self):
         data = {VEHICLE_TYPE: VAN}
         response = self.client.post('/parking_lot/park', json=data)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.get_data())
-        self.assertIn('message', data)
+        self.assertIn('Vehicle parked', data)
 
     def test_park_car(self):
         data = {VEHICLE_TYPE: CAR}
         response = self.client.post('/parking_lot/park', json=data)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.get_data())
-        self.assertIn('message', data)
+        self.assertIn('Vehicle parked', data)
+
+    def test_get_remaining_spots(self):
+        data = {VEHICLE_TYPE: CAR}
+        response = self.client.get('/parking_lot/remaining_spots', json=data)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.get_data())
+        self.assertIn('car', data)
+        self.assertIn('motorcycle', data)
+        self.assertIn('van', data)
 
     def test_park_car_in_van_spot(self):
         data = {VEHICLE_TYPE: MOTORCYCLE}
@@ -91,3 +109,17 @@ class ParkingLotTest(unittest.TestCase):
         self.assertGreater(car_spots, car_spots2)
         self.assertGreater(parked_cars2, parked_cars)
 
+    def test_removing_van_from_car_spot(self):
+        data = {VEHICLE_TYPE: VAN}
+        spots[CAR] = 0
+        spots[MOTORCYCLE] = 0
+        spots[VAN] = 0
+        parked_vehicles[CAR] = [VAN]
+        car_spots = spots[CAR]
+        parked_cars = len(parked_vehicles[CAR])
+        response = self.client.delete('/parking_lot/remove', json=data)
+        car_spots2 = spots[CAR]
+        parked_cars2 = len(parked_vehicles[CAR])
+        self.assertEqual(response.status_code, 200)
+        self.assertGreater(car_spots2, car_spots)
+        self.assertGreater(parked_cars, parked_cars2)
