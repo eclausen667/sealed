@@ -63,8 +63,8 @@
 
 ## ASSUMPTIONS
 ```
-For this take home project I made the assumption that when there are 3 car spots available that they are adjacent. I also made the assumption that when removing vehicles from the lots the preference to clear spots goes in the order of Van, Car, Motorcycle. 
+For this project, I generated a fake parking lot to handle the situation of the adjacent car spots. I did this by generating a parking lot with a random order of the provided spots. I also made the assumption that when removing vehicles from the lots the preference to clear spots goes in the order of Van, Car, Motorcycle. 
 
-The data source I decided to use for this project was two simple dictionaries. This could also be converted to a sql table if I wanted this dictionary to exist after runtime. However, for the sake of displaying my technical skills I confirmed with Bryan that this is sufficent.
+The data source I decided to use for this project was two simple dictionaries and a list for the parkig lot. This could also be converted to a sql table if I wanted this dictionary to exist after runtime. However, for the sake of displaying my technical skills I confirmed with Bryan that this is sufficent.
 
 ```
