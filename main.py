@@ -15,12 +15,49 @@ NUMBER_OF_CAR_SPOTS = 1
 NUMBER_OF_VAN_SPOTS = 1
 
 
+def modify_parking_lot_for_van(spot_location, spot_value):
+    parking_lot[spot_location - 2] = (CAR, spot_value)
+    parking_lot[spot_location - 1] = (CAR, spot_value)
+    parking_lot[spot_location] = (CAR, spot_value)
+
+
+def check_open_car_spots_for_van():
+    temp = ""
+    for i in range(0, len(parking_lot)):
+        if parking_lot[i][0] == MOTORCYCLE or parking_lot[i][0] == VAN or parking_lot[i][1] != 'o':
+            temp = ""
+        else:
+            temp += parking_lot[i][1]
+            if 'ooo' in temp:
+                modify_parking_lot_for_van(i, VAN)
+                return True
+    return False
+
+
+def check_closed_car_spots_for_van():
+    temp = ""
+    for i in range(0, len(parking_lot)):
+        if parking_lot[i][0] == MOTORCYCLE or parking_lot[i][0] == VAN or parking_lot[i][1] == "o":
+            temp = ""
+        else:
+            temp += parking_lot[i][1]
+            if "vanvanvan" in temp:
+                modify_parking_lot_for_van(i, "o")
+                return True
+    return False
+
+
 def park_helper(vehicle_type: str, spot_type: str) -> json:
     """check if the parking lot is full."""
     if vehicle_type == VAN and spot_type == CAR:
-        spots[spot_type] -= 3
+        is_spot = check_open_car_spots_for_van()
+        if is_spot:
+            spots[spot_type] -= 3
+        else:
+            return jsonify({"Warning": "Not enough adjacent car spots for van"})
     else:
         spots[spot_type] -= 1
+        parking_lot[parking_lot.index((spot_type, 'o'))] = (spot_type, vehicle_type)
     pv = parked_vehicles[spot_type]
     pv.append(vehicle_type)
     parked_vehicles[spot_type] = pv
@@ -97,17 +134,21 @@ def remove_helper(vehicle_type: str) -> json:
     if vehicle_type in parked_vehicles[VAN]:
         parked_vehicles[VAN].remove(vehicle_type)
         spots[VAN] += 1
+        parking_lot[parking_lot.index((VAN, vehicle_type))] = (VAN, 'o')
         return jsonify({"removed": f"a {vehicle_type} was removed from a van spot"})
     elif vehicle_type in parked_vehicles[CAR]:
         parked_vehicles[CAR].remove(vehicle_type)
         if vehicle_type == VAN:
+            check_closed_car_spots_for_van()
             spots[CAR] += 3
         else:
+            parking_lot[parking_lot.index((CAR, vehicle_type))] = (CAR, 'o')
             spots[CAR] += 1
         return jsonify({"removed": f"a {vehicle_type} was removed from a car spot"})
     elif vehicle_type in parked_vehicles[MOTORCYCLE]:
         parked_vehicles[MOTORCYCLE].remove(vehicle_type)
         spots[MOTORCYCLE] += 1
+        parking_lot[parking_lot.index((MOTORCYCLE, vehicle_type))] = (MOTORCYCLE, 'o')
         return jsonify({"removed": f"a {vehicle_type} was removed from a motorcycle spot"})
 
 
@@ -134,4 +175,4 @@ def get_van_spots() -> json:
         return jsonify({"van spots:": str(len(parked_vehicles[VAN]))})
 
 
-spots, parked_vehicles = initialize(NUMBER_OF_MOTORCYCLE_SPOTS, NUMBER_OF_CAR_SPOTS, NUMBER_OF_VAN_SPOTS)
+spots, parked_vehicles, parking_lot = initialize(NUMBER_OF_MOTORCYCLE_SPOTS, NUMBER_OF_CAR_SPOTS, NUMBER_OF_VAN_SPOTS)
